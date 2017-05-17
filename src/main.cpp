@@ -40,7 +40,7 @@ void setup() {
       if (abs(last_angle - angle)<=0.001) {
         cnt++;
       }
-      Serial.println(String(abs(last_angle - angle)) + "  cnt= " + cnt + " " + last_angle + " " + angle);
+      Serial1.println(String(abs(last_angle - angle)) + "  cnt= " + cnt + " " + last_angle + " " + angle);
       delay(100);
       movement->updateOutput();
       movement->updateOutput();
@@ -56,39 +56,50 @@ int mils = 0;
 
 
 void loop() {
-    // int speed = 0;
-    // int range = 0;
+    int a = 0;
+    int b = 0;
+    char buf[128];
+    char buf_out[16];
 
     movement->updateRPM(LEFT, Wheels::getVelocityLeft());
     movement->updateRPM(RIGHT, Wheels::getVelocityRight());
 	  movement->updateOutput();
     // Serial.println(cmd);
-    char buf[128];
-    char buf_out[16];
-    if(cmd == 0 && movement->state==STOP) {
-      movement->move(10, 70);
+    msg = Serial1.readString();
+    msg.toCharArray(buf_out, 16);
+    msg = strtok(buf_out, " ");
+    Serial1.println(msg);
+    if(msg!="") {
+      a = msg.toInt();
+    }
+    msg = strtok(NULL, " ");
+    Serial1.println(msg);
+    if(msg!="") {
+  		b = msg.toInt();
+    }
+
+    if(cmd == 0 && movement->state==STOP && a!=0 && b!=0) {
+      movement->move(a, 70);
       cmd++;
     } else if(cmd == 1 && movement->state==STOP) {
       movement->turn(0,90);
       cmd++;
     } else if(cmd == 2 && movement->state==STOP) {
-      movement->move(10, 70);
+      movement->move(b, 70);
       delay(1000);
       cmd++;
     } else if(cmd == 3 && movement->state==STOP) {
       movement->turn(0,90);
       cmd++;
     } else if(cmd == 4 && movement->state==STOP) {
-      movement->move(10, 70);
+      movement->move(a, 70);
       delay(1000);
       cmd++;
     } else if(cmd == 5 && movement->state==STOP) {
       movement->turn(0,90);
       cmd++;
     } else if(cmd == 6 && movement->state==STOP) {
-      movement->move(10, 70);
-      delay(1000);
-      cmd =0;
+      movement->move(b, 70);
     }
   //   sprintf(buf, " vel=%.2f RPM global_speed_right = %d ;vel1=%.2f RPM global_speed_left=%d, reverse_left = %d, reverse_right = %d , state = %d \n",
   //   (float)Wheels::getVelocityLeft() , movement->getGlobalSpeed(RIGHT),
@@ -98,19 +109,7 @@ void loop() {
   //   movement->state
   // );
   //   Serial.print(buf);
-    // msg = Serial.readString();
-    // msg.toCharArray(buf_out, 16);
-    // msg = strtok(buf_out, " ");
-    // Serial.println(msg);
-    //  if(msg!="") {
-    //    speed = msg.toInt();
-    //  }
-    //  msg = strtok(NULL, " ");
-    // Serial.println(msg);
-    //  if(msg!="") {
-    //   		range = msg.toInt();
-    //       movement->turn(speed, range);
-    //  }
+
 
 
 
