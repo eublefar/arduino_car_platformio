@@ -44,7 +44,7 @@ void Movement::updateRPM(uint8 side, double rpm)
 void Movement::updateOutput()
 {
 	int mod1 = 0,mod2 = 0;
-	position->updateAngles();
+	checkStop();
 
 	evalState();
 	if (state & TURNING_LEFT || state & DRIVING_REVERSE) {
@@ -101,6 +101,13 @@ void Movement::updateOutput()
 		global_speed_right = 0;
 	}
 	analogWrite(rightPin2, abs(mod2 -global_speed_right));
+	// Serial.println(position->getYawAngle());
+	checkStop();
+}
+
+
+void Movement::checkStop()
+{
 	position->updateAngles();
 	if(state & MOVING)
 	{
@@ -113,9 +120,7 @@ void Movement::updateOutput()
 	}
 	else if(state & (TURNING_LEFT|TURNING_RIGHT))
 	{
-
-		if((position->getYawAngle()>=target_angle)
-		&& (position->getYawAngle()<=target_angle+5))
+		if((position->getYawAngle()>=target_angle-10) && (position->getYawAngle()<=target_angle+10))
 		{
 			Serial.println(String("Turn STOP angle = ") + position->getYawAngle());
 			stop(LEFT);
@@ -124,7 +129,6 @@ void Movement::updateOutput()
 			target_angle = 0;
 		}
 	}
-	// Serial.println(position->getYawAngle());
 }
 
 void Movement::evalState()
@@ -237,14 +241,14 @@ void Movement::turn(uint8 side, uint8 degrees)
 		if(side == LEFT)
 		{
 			// Serial.println("TURN BIACH");
-			setRPM(LEFT, -255);
+			setRPM(LEFT, -70);
 
-			setRPM(RIGHT, 255);
+			setRPM(RIGHT, 70);
 		}
 		else if(side == RIGHT)
 		{
-			setRPM(RIGHT, -255);
-			setRPM(LEFT, 255);
+			setRPM(RIGHT, -70);
+			setRPM(LEFT, 70);
 		}
 		evalState();
 		target_angle = calculateTargetAngle(angle, degrees);

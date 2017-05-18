@@ -53,31 +53,28 @@ String msg = "";
 String msg1 = "";
 int cmd = 0;
 int mils = 0;
-
-
+int a = 0;
+int b = 0;
+char buf_out[16];
 void loop() {
-    int a = 0;
-    int b = 0;
-    char buf[128];
-    char buf_out[16];
-
     movement->updateRPM(LEFT, Wheels::getVelocityLeft());
     movement->updateRPM(RIGHT, Wheels::getVelocityRight());
 	  movement->updateOutput();
     // Serial.println(cmd);
     msg = Serial1.readString();
-    msg.toCharArray(buf_out, 16);
-    msg = strtok(buf_out, " ");
-    Serial1.println(msg);
     if(msg!="") {
-      a = msg.toInt();
+        msg.toCharArray(buf_out, 16);
+        msg = strtok(buf_out, " ");
+        // Serial1.println(msg);
+        if(msg!="") {
+          a = msg.toInt();
+        }
+        msg = strtok(NULL, " ");
+        // Serial1.println(msg);
+        if(msg!="") {
+      		b = msg.toInt();
+        }
     }
-    msg = strtok(NULL, " ");
-    Serial1.println(msg);
-    if(msg!="") {
-  		b = msg.toInt();
-    }
-
     if(cmd == 0 && movement->state==STOP && a!=0 && b!=0) {
       movement->move(a, 70);
       cmd++;
@@ -100,6 +97,9 @@ void loop() {
       cmd++;
     } else if(cmd == 6 && movement->state==STOP) {
       movement->move(b, 70);
+      a=0;
+      b=0;
+      cmd=0;
     }
   //   sprintf(buf, " vel=%.2f RPM global_speed_right = %d ;vel1=%.2f RPM global_speed_left=%d, reverse_left = %d, reverse_right = %d , state = %d \n",
   //   (float)Wheels::getVelocityLeft() , movement->getGlobalSpeed(RIGHT),
@@ -109,9 +109,5 @@ void loop() {
   //   movement->state
   // );
   //   Serial.print(buf);
-
-
-
-
 }
 #endif

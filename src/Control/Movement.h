@@ -53,6 +53,7 @@ class Movement
 	int getGlobalSpeed(int side);
 	void stop(int side);
 	float calculateTargetAngle(float angle, float degrees);
+	void checkStop();
 
 };
 
