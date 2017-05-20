@@ -72,7 +72,7 @@ void Position::updateAngles()
     {
       // reset so we can continue cleanly
       mpu.resetFIFO();
-      //Serial.println(F("FIFO overflow!"));
+      // Serial.println(F("FIFO overflow!"));
       // otherwise, check for DMP data ready interrupt (this should happen frequently)
     }
     else if (mpuIntStatus & 0x02)
@@ -83,6 +83,7 @@ void Position::updateAngles()
       mpu.dmpGetQuaternion(&q, fifoBuffer);
       mpu.dmpGetGravity(&gravity, &q);
       mpu.dmpGetYawPitchRoll(ypr, &q, &gravity);
+      //Serial.println(this->getYawAngle());
     }
   }
 }

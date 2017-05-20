@@ -7,7 +7,15 @@
 #include <Sensors/Wheels.h>
 
 
+
+
+
 Movement *movement;
+
+void checkStopInterrupt() {
+	movement ->checkStop();
+
+}
 /////////////////////////////////////////////////
 //Krótki opis klas:
 // Wheels - statyczna klasa do wczytywania sensorów halla
@@ -32,35 +40,34 @@ void setup() {
   int cnt =0;
   movement->updateOutput();
   delay(5000);
+  Timer5.attachInterrupt(checkStopInterrupt);
+  Timer5.start(15000);
   while(cnt<60) {
       float angle = 0;
-      movement->updateOutput();
-      movement->updateOutput();
-      while(String(angle = movement->getBearing())=="ovf"){movement->updateOutput();}
+      while(String(angle = movement->getBearing())=="ovf"){delay(100);}
       if (abs(last_angle - angle)<=0.001) {
         cnt++;
       }
       Serial1.println(String(abs(last_angle - angle)) + "  cnt= " + cnt + " " + last_angle + " " + angle);
       delay(100);
-      movement->updateOutput();
-      movement->updateOutput();
-      while(String(last_angle = movement->getBearing())=="ovf"){movement->updateOutput();}
+      while(String(last_angle = movement->getBearing())=="ovf"){delay(100);}
   }
+
 }
 
 
 String msg = "";
 String msg1 = "";
 int cmd = 0;
-int mils = 0;
 int a = 0;
 int b = 0;
 char buf_out[16];
+
+
 void loop() {
     movement->updateRPM(LEFT, Wheels::getVelocityLeft());
     movement->updateRPM(RIGHT, Wheels::getVelocityRight());
 	  movement->updateOutput();
-    // Serial.println(cmd);
     msg = Serial1.readString();
     if(msg!="") {
         msg.toCharArray(buf_out, 16);

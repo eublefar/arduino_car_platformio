@@ -23,8 +23,8 @@ class Movement
 	uint8 leftPin2;
 	uint8 rightPin1;
 	uint8 rightPin2;
-
-
+	bool state_changed= false;
+	int mod1 = 0,mod2 = 0;
 	int global_speed_right = 0;
 	int global_speed_left = 0;
 

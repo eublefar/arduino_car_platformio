@@ -1,8 +1,10 @@
 #include "Arduino.h"
 #include "Movement.h"
 #include "Sensors/Wheels.h"
-#define ALPHA 0.7
+
+#define ALPHA 1
 int Movement::range = 0;
+
 
 Movement::Movement(uint8 pinLeft1, uint8 pinLeft2, uint8 pinRight1, uint8 pinRight2)
 {
@@ -43,47 +45,47 @@ void Movement::updateRPM(uint8 side, double rpm)
 
 void Movement::updateOutput()
 {
-	int mod1 = 0,mod2 = 0;
-	checkStop();
-
 	evalState();
-	if (state & TURNING_LEFT || state & DRIVING_REVERSE) {
-		digitalWrite(leftPin1, LOW);
-		mod1 = 0;
-	}
-	else if(state == STOP)
+	if(state_changed)
 	{
-		mod1 = 255;
-		stop(LEFT);
-	}
-	else if(state & DRIVING || state & TURNING_RIGHT)
-	{
-		digitalWrite(leftPin1, HIGH);
-		mod1 = 255;
-	}
+		if (state & TURNING_LEFT || state & DRIVING_REVERSE) {
+			digitalWrite(leftPin1, LOW);
+			mod1 = 0;
+		}
+		else if(state == STOP)
+		{
+			mod1 = 255;
+			stop(LEFT);
+		}
+		else if(state & DRIVING || state & TURNING_RIGHT)
+		{
+			digitalWrite(leftPin1, HIGH);
+			mod1 = 255;
+		}
 
-	if (state & TURNING_RIGHT || state & DRIVING_REVERSE)
-	{
-		digitalWrite(rightPin1, HIGH);
-		mod2 = 255;
-	}
-	else if(state == STOP)
-	{
-		mod2 = 255;
-		stop(RIGHT);
-	}
-	else if (state & DRIVING || state & TURNING_LEFT)
-	{
-		digitalWrite(rightPin1, LOW);
-		mod2 = 0;
+		if (state & TURNING_RIGHT || state & DRIVING_REVERSE)
+		{
+			digitalWrite(rightPin1, HIGH);
+			mod2 = 255;
+		}
+		else if(state == STOP)
+		{
+			mod2 = 255;
+			stop(RIGHT);
+		}
+		else if (state & DRIVING || state & TURNING_LEFT)
+		{
+			digitalWrite(rightPin1, LOW);
+			mod2 = 0;
+		}
 	}
 
 	global_speed_left = global_speed_left + ALPHA*(target_velocity_left - ((float)current_rpm_left));
 	if(global_speed_left >254)
 	{
 		global_speed_left = 254;
-	}else
-	if (global_speed_left <0)
+	}
+	else if (global_speed_left <0)
 	{
 		global_speed_left = 0;
 	}
@@ -95,14 +97,11 @@ void Movement::updateOutput()
 	{
 		global_speed_right = 254;
 	}
-	else
-	if (global_speed_right <0)
+	else if (global_speed_right <0)
 	{
 		global_speed_right = 0;
 	}
 	analogWrite(rightPin2, abs(mod2 -global_speed_right));
-	// Serial.println(position->getYawAngle());
-	checkStop();
 }
 
 
@@ -116,40 +115,63 @@ void Movement::checkStop()
 					stop(LEFT);
 					stop(RIGHT);
 					range = 0;
+					state = STOP;
 			}
 	}
 	else if(state & (TURNING_LEFT|TURNING_RIGHT))
 	{
-		if((position->getYawAngle()>=target_angle-10) && (position->getYawAngle()<=target_angle+10))
+		if((position->getYawAngle()>=target_angle) && (position->getYawAngle()<=target_angle+10))
 		{
 			Serial.println(String("Turn STOP angle = ") + position->getYawAngle());
 			stop(LEFT);
 			stop(RIGHT);
 			angle = 0;
 			target_angle = 0;
+			state = STOP;
 		}
 	}
+
 }
 
 void Movement::evalState()
 {
 	if(target_velocity_left == 0 && target_velocity_right == 0)
 	{
-		state = STOP;
+		if(state != STOP)
+		{
+			state = STOP;
+			state_changed = true;
+		}
 	}
 	else if(reverse_left && reverse_right)
 	{
-		state = DRIVING_REVERSE;
+		if(state != DRIVING_REVERSE)
+		{
+			state = DRIVING_REVERSE;
+			state_changed = true;
+		}
 	}
 	else if(reverse_left)
 	{
-		state = TURNING_LEFT;
+		if(state != TURNING_LEFT)
+		{
+			state = TURNING_LEFT;
+			state_changed = true;
+		}
 	}
 	else if(reverse_right)
 	{
-		state = TURNING_RIGHT;
+		if(state != TURNING_RIGHT)
+		{
+			state = TURNING_RIGHT;
+			state_changed = true;
+		}
 	} else  {
-		state = DRIVING;
+		if(state != DRIVING)
+		{
+			state = DRIVING;
+			state_changed = true;
+		}
 	}
 
 	if(range && (state & (DRIVING_REVERSE | DRIVING))) {
