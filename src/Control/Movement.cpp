@@ -48,6 +48,7 @@ void Movement::updateOutput()
 	evalState();
 	if(state_changed)
 	{
+		Serial1.println(state);
 		if (state & TURNING_LEFT || state & DRIVING_REVERSE) {
 			digitalWrite(leftPin1, LOW);
 			mod1 = 0;
@@ -78,6 +79,7 @@ void Movement::updateOutput()
 			digitalWrite(rightPin1, LOW);
 			mod2 = 0;
 		}
+		state_changed = false;
 	}
 
 	global_speed_left = global_speed_left + ALPHA*(target_velocity_left - ((float)current_rpm_left));
@@ -187,12 +189,14 @@ void Movement::stop(int side)
 		digitalWrite(leftPin1, HIGH);
 		digitalWrite(leftPin2, HIGH);
 		global_speed_left = 0;
+		mod1=255;
 	}
 	else if(side == RIGHT)
 	{
 		digitalWrite(rightPin1, HIGH);
 		digitalWrite(rightPin2, HIGH);
 		global_speed_right = 0;
+		mod2=255;
 	}
 	setRPM(side, 0);
 }

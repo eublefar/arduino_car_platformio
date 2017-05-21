@@ -1,20 +1,45 @@
 #ifndef UNIT_TEST123
-
+#include <functional>
 #include <ISADefinitions.h>
 #include <DueTimer.h>
 #include <Control/movement.h>
 #include <Sensors/Position.h>
 #include <Sensors/Wheels.h>
-
-
-
+#include <Utility/queue.h>
 
 
 Movement *movement;
 
-void checkStopInterrupt() {
+bool executing = false;
+void checkStopInterrupt()
+{
 	movement ->checkStop();
+}
+queue<std::function<void()>> cmd_que;
 
+void addCommand(String command, int a, int b)
+{
+  Serial1.println(command + " 123 " + (command == "start"));
+  if(command == "move")
+  {
+    cmd_que.push(std::bind(&Movement::move, movement, a, b));
+    Serial1.println(String("added move command args = ") + a + " " + b);
+  }
+  else if(command == "turn")
+  {
+    cmd_que.push(std::bind(&Movement::turn, movement, a, b));
+    Serial1.println(String("added turn command args = ") + a + " " + b);
+  }
+  else if(command == "setRPM")
+  {
+    cmd_que.push(std::bind(&Movement::setRPM, movement, a, b));
+    Serial1.println(String("added setRPM command args = ") + a + " " + b);
+  }
+  else if(command == "start")
+  {
+    executing = true;
+    Serial1.println("starting execution");
+  }
 }
 /////////////////////////////////////////////////
 //Krótki opis klas:
@@ -33,15 +58,14 @@ void setup() {
   movement = new Movement(SERVO1, SERVO2, SERVO3, SERVO4);
   movement->updateOutput();
 
-
 ////////////////// Kalibracja
   float last_angle = 0;
-  while(String(last_angle = movement->getBearing())=="ovf"){movement->updateOutput();}
+  while(String(last_angle = movement->getBearing())=="ovf"){delay(100);}
   int cnt =0;
   movement->updateOutput();
-  delay(5000);
   Timer5.attachInterrupt(checkStopInterrupt);
-  Timer5.start(15000);
+  Timer5.start(18000);
+
   while(cnt<60) {
       float angle = 0;
       while(String(angle = movement->getBearing())=="ovf"){delay(100);}
@@ -49,7 +73,7 @@ void setup() {
         cnt++;
       }
       Serial1.println(String(abs(last_angle - angle)) + "  cnt= " + cnt + " " + last_angle + " " + angle);
-      delay(100);
+      delay(500);
       while(String(last_angle = movement->getBearing())=="ovf"){delay(100);}
   }
 
@@ -57,7 +81,7 @@ void setup() {
 
 
 String msg = "";
-String msg1 = "";
+String command = "";
 int cmd = 0;
 int a = 0;
 int b = 0;
@@ -69,52 +93,53 @@ void loop() {
     movement->updateRPM(RIGHT, Wheels::getVelocityRight());
 	  movement->updateOutput();
     msg = Serial1.readString();
-    if(msg!="") {
+
+    if(msg!="")
+    {
         msg.toCharArray(buf_out, 16);
         msg = strtok(buf_out, " ");
-        // Serial1.println(msg);
-        if(msg!="") {
-          a = msg.toInt();
+        if(msg!="")
+        {
+          command = msg;
         }
+
         msg = strtok(NULL, " ");
-        // Serial1.println(msg);
-        if(msg!="") {
+        if(msg!="")
+        {
+          a = msg.toInt();
+        } else
+        {
+          a=0;
+        }
+
+				msg = strtok(NULL, " ");
+        if(msg!="")
+        {
       		b = msg.toInt();
         }
+        else
+        {
+          b=0;
+        }
+
+        addCommand(command, a, b);
     }
-    if(cmd == 0 && movement->state==STOP && a!=0 && b!=0) {
-      movement->move(a, 70);
-      cmd++;
-    } else if(cmd == 1 && movement->state==STOP) {
-      movement->turn(0,90);
-      cmd++;
-    } else if(cmd == 2 && movement->state==STOP) {
-      movement->move(b, 70);
-      delay(1000);
-      cmd++;
-    } else if(cmd == 3 && movement->state==STOP) {
-      movement->turn(0,90);
-      cmd++;
-    } else if(cmd == 4 && movement->state==STOP) {
-      movement->move(a, 70);
-      delay(1000);
-      cmd++;
-    } else if(cmd == 5 && movement->state==STOP) {
-      movement->turn(0,90);
-      cmd++;
-    } else if(cmd == 6 && movement->state==STOP) {
-      movement->move(b, 70);
-      a=0;
-      b=0;
-      cmd=0;
+
+    if(!cmd_que.empty())
+    {
+
+      if(movement->state == STOP && executing)
+      {
+				Serial1.println("executing");
+        cmd_que.front()();
+        cmd_que.pop();
+      }
     }
-  //   sprintf(buf, " vel=%.2f RPM global_speed_right = %d ;vel1=%.2f RPM global_speed_left=%d, reverse_left = %d, reverse_right = %d , state = %d \n",
-  //   (float)Wheels::getVelocityLeft() , movement->getGlobalSpeed(RIGHT),
-  //   (float)Wheels::getVelocityRight(), movement->getGlobalSpeed(LEFT),
-  //   movement->reverse_left,
-  //   movement->reverse_right,
-  //   movement->state
-  // );
-  //   Serial.print(buf);
+    else
+    {
+      executing = false;
+    }
 }
+
+
 #endif

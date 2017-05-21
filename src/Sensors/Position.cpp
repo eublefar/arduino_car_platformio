@@ -13,8 +13,8 @@ volatile bool Position::mpuInterrupt = false;
 Position::Position()
 {
     Wire.begin();
-    Wire.setClock(200000);
-    Serial.begin(115200);
+    // Wire.setClock(200000);
+    // Serial.begin(115200);
     while (!Serial);
     Serial.println("HI!");
     mpu.initialize();
