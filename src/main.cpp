@@ -64,7 +64,7 @@ void setup() {
   int cnt =0;
   movement->updateOutput();
   Timer5.attachInterrupt(checkStopInterrupt);
-  Timer5.start(18000);
+  Timer5.start(30000);
 
   while(cnt<60) {
       float angle = 0;

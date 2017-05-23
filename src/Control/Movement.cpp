@@ -120,9 +120,21 @@ void Movement::checkStop()
 					state = STOP;
 			}
 	}
-	else if(state & (TURNING_LEFT|TURNING_RIGHT))
+	else if(state & TURNING_RIGHT)
 	{
 		if((position->getYawAngle()>=target_angle) && (position->getYawAngle()<=target_angle+10))
+		{
+			Serial.println(String("Turn STOP angle = ") + position->getYawAngle());
+			stop(LEFT);
+			stop(RIGHT);
+			angle = 0;
+			target_angle = 0;
+			state = STOP;
+		}
+	}
+	else if (state & TURNING_LEFT)
+	{
+		if((position->getYawAngle()>=target_angle-10) && (position->getYawAngle()<=target_angle))
 		{
 			Serial.println(String("Turn STOP angle = ") + position->getYawAngle());
 			stop(LEFT);
