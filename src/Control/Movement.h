@@ -4,6 +4,7 @@
 #include "Arduino.h"
 #include<DueTimer.h>
 #include "Sensors/Position.h"
+#include <functional>
 #define LEFT 0
 #define RIGHT 1
 
@@ -19,12 +20,17 @@ typedef uint8_t uint8;
 class Movement
 {
 	private:
+
 	uint8 leftPin1;
 	uint8 leftPin2;
 	uint8 rightPin1;
 	uint8 rightPin2;
+	static int range;
 	bool state_changed= false;
+	bool reverse_left= false, reverse_right= false;
+
 	int mod1 = 0,mod2 = 0;
+
 	int global_speed_right = 0;
 	int global_speed_left = 0;
 
@@ -38,10 +44,12 @@ class Movement
 	float target_angle = 0;
 	Position *position;
 
+	std::function<void()> callback_on_obstacle;
+
 	void evalState();
-	public:
-	static int range;
-	bool reverse_left= false, reverse_right= false;
+
+public:
+
 	State state;
 	Movement(uint8 pinLeft1, uint8 pinLeft2, uint8 pinRight1, uint8 pinRight2);
 	float getBearing(){ return position->getYawAngle();}
@@ -50,6 +58,7 @@ class Movement
 	void setRPM(uint8 side,int target);
 	void move(uint8 range, int speed);
 	void turn(uint8 side, uint8 degrees);
+	void setCallbackOnObstacle(std::function<void()> callback) {callback_on_obstacle = callback;}
 	int getGlobalSpeed(int side);
 	void stop(int side);
 	float calculateTargetAngle(float angle, float degrees);

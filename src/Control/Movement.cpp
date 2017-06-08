@@ -5,14 +5,14 @@
 #define ALPHA 1
 int Movement::range = 0;
 
-
+#define SAFE_DIST 20
 Movement::Movement(uint8 pinLeft1, uint8 pinLeft2, uint8 pinRight1, uint8 pinRight2)
 {
-
 	leftPin1 = pinLeft1;
 	leftPin2 = pinLeft2;
 	rightPin1 = pinRight1;
 	rightPin2 = pinRight2;
+
 
 	pinMode(pinLeft1,OUTPUT);
 	pinMode(pinLeft2,OUTPUT);
@@ -109,7 +109,9 @@ void Movement::updateOutput()
 
 void Movement::checkStop()
 {
+
 	position->updateAngles();
+
 	if(state & MOVING)
 	{
 			if(Wheels::getCountRight() >=range && Wheels::getCountLeft() >= range)

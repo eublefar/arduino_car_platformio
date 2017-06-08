@@ -1,4 +1,4 @@
-#ifndef UNIT_TEST123
+#ifdef UNIT_TEST123
 #include <functional>
 #include <ISADefinitions.h>
 #include <DueTimer.h>
@@ -6,6 +6,8 @@
 #include <Sensors/Position.h>
 #include <Sensors/Wheels.h>
 #include <Utility/queue.h>
+#define TRIG 51
+#define ECHO 50
 
 
 Movement *movement;
@@ -73,9 +75,17 @@ void setup() {
         cnt++;
       }
       Serial1.println(String(abs(last_angle - angle)) + "  cnt= " + cnt + " " + last_angle + " " + angle);
-      delay(500);
+      delay(100);
       while(String(last_angle = movement->getBearing())=="ovf"){delay(100);}
   }
+	pinMode(ECHO, INPUT);
+	pinMode(TRIG, OUTPUT);
+	movement->setCallbackOnObstacle([]()-> void
+	{
+		Serial1.println("obstacle");
+		movement->stop(0);
+		movement->stop(1);
+	});
 
 }
 
@@ -139,6 +149,21 @@ void loop() {
     {
       executing = false;
     }
+
+		digitalWrite(TRIG, LOW);
+		delayMicroseconds(2);
+		// Sets the trigPin on HIGH state for 10 micro seconds
+		digitalWrite(TRIG, HIGH);
+		delayMicroseconds(10);
+		digitalWrite(TRIG, LOW);
+		// Reads the echoPin, returns the sound wave travel time in microseconds
+		float dist = pulseIn(ECHO, HIGH)*0.034/2;
+
+		if(dist <= 20) {
+		//	callback_on_obstacle();
+			movement->stop(LEFT);
+			movement->stop(RIGHT);
+		}
 }
 
 
